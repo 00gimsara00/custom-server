@@ -1,0 +1,804 @@
+package net.tcodes.team24clan;
+
+import adrt.ADRTLogCatReader;
+import android.app.Activity;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.Uri;
+import android.net.VpnService;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Process;
+import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
+import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.Toast;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.reward.RewardItem;
+import java.util.ArrayList;
+import net.tcodes.team24clan.core.TorrentDetection;
+import net.tcodes.team24clan.core.UpdateCore;
+import net.tcodes.team24clan.db.AdmobHelper;
+import net.tcodes.team24clan.db.DataBaseHelper;
+import net.tcodes.team24clan.fragment.LogFragment;
+import net.tcodes.team24clan.logger.VPNLog;
+import net.tcodes.team24clan.model.IProtect;
+import net.tcodes.team24clan.util.Constants;
+import net.tcodes.team24clan.util.Constraints;
+import net.tcodes.team24clan.util.ExceptionHandler;
+import net.tcodes.team24clan.util.MilitaryGradeEncrypt;
+import net.tcodes.team24clan.util.Util;
+import net.tcodes.team24clan.view.CenteredToolBar;
+import net.tcodes.team24clan.view.CuboidButton;
+import net.tcodes.team24clan.view.DNSDialog;
+import net.tcodes.team24clan.view.RippleBackground;
+import net.tcodes.team24clan.view.TweakDialog;
+import org.bitvise.SSHTunnelService;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+public class MainActivity extends MainBase implements SSHTunnelService.StatusChangeListener {
+  private static final int REQUEST_CODE = 0;
+  
+  private AdmobHelper adhelper;
+  
+  private Button btnAcc;
+  
+  private Constants conts;
+  
+  private CoordinatorLayout coordinatorLayout;
+  
+  private DataBaseHelper db;
+  
+  private DrawerLayout drawerLayout;
+  
+  private TextView ipAddress;
+  
+  private Spinner mServer;
+  
+  private Spinner mTweak;
+  
+  private RippleBackground rippleBackground;
+  
+  private ArrayAdapter serverAdapt;
+  
+  public ArrayList<String> serverList = new ArrayList<String>();
+  
+  private SharedPreferences sp;
+  
+  private CuboidButton start_vpn;
+  
+  private CenteredToolBar toolbar;
+  
+  private TorrentDetection torrent;
+  
+  private ArrayAdapter tweakAdapt;
+  
+  public ArrayList<String> tweakList = new ArrayList<String>();
+  
+  private ImageView v;
+  
+  private TextView vpn_status;
+  
+  private void enabledWidget(boolean paramBoolean) {
+    this.mServer.setEnabled(paramBoolean);
+    if (this.sp.getBoolean("custom_tweak", false)) {
+      this.mTweak.setEnabled(false);
+      return;
+    } 
+    this.mTweak.setEnabled(paramBoolean);
+  }
+  
+  private void hatdog(boolean paramBoolean) {
+    if (paramBoolean) {
+      try {
+        Class<?> clazz = Class.forName("net.tcodes.team24clan.InjectorService");
+        Intent intent = new Intent((Context)this, clazz);
+        intent.setAction("START_INJECTOR");
+        if (Build.VERSION.SDK_INT >= 26)
+          return; 
+      } catch (ClassNotFoundException classNotFoundException) {
+        throw new NoClassDefFoundError(classNotFoundException.getMessage());
+      } 
+      startService((Intent)classNotFoundException);
+      return;
+    } 
+    if (SSHTunnelService.isServiceStarted())
+      IProtect.b(); 
+    if (InjectorService.isServiceStarted())
+      try {
+        Class<?> clazz = Class.forName("net.tcodes.team24clan.InjectorService");
+        stopService(new Intent((Context)this, clazz));
+        return;
+      } catch (ClassNotFoundException classNotFoundException) {
+        throw new NoClassDefFoundError(classNotFoundException.getMessage());
+      }  
+  }
+  
+  private boolean isEmpty(String paramString) {
+    return paramString.isEmpty();
+  }
+  
+  @SuppressWarnings("ConstantConditions")
+  private void setupToolbar(String paramString) {
+    this.toolbar = (CenteredToolBar)findViewById(2131624061);
+    setSupportActionBar((Toolbar)this.toolbar);
+    if (paramString != null) {
+      getSupportActionBar().setTitle(paramString);
+    } else {
+      try {
+        paramString = getPackageManager().getActivityInfo(getComponentName(), 128).loadLabel(getPackageManager()).toString();
+        getSupportActionBar().setTitle(paramString);
+      } catch (android.content.pm.PackageManager.NameNotFoundException nameNotFoundException) {}
+    } 
+    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    getSupportActionBar().setDisplayShowHomeEnabled(true);
+  }
+  
+  private void snack(String paramString) {
+    Snackbar.make((View)this.coordinatorLayout, paramString, -1).show();
+  }
+  
+  private void startVPN() {
+    this.conts.setUsername("ken");
+    this.conts.setPassword("vpn.phfree.xyz");
+    this.conts.setSSHHost(this.sp.getString("SSHHost", ""));
+    this.conts.setSSHPort(this.sp.getString("SSHPort", ""));
+    this.conts.setSSHDropbear(this.sp.getString("DropBear", ""));
+    this.conts.setSSLPort(this.sp.getString("SSLPort", ""));
+    this.conts.setHTTPayload(this.sp.getString("Payload", ""));
+    this.conts.setDirectPEnable(this.sp.getBoolean("isDirectP", true));
+    this.conts.setSSLEnable(this.sp.getBoolean("isSSL", true));
+    if (!this.sp.getBoolean("CustomProxy", true)) {
+      this.conts.setProxy(this.sp.getString("SSHHost", ""));
+      this.conts.setProxyPort(this.sp.getString("ProxyPort", ""));
+    } else {
+      this.conts.setProxy(this.sp.getString("cProxyHost", ""));
+      this.conts.setProxyPort(this.sp.getString("cProxyPort", ""));
+    } 
+    this.conts.setUsername("ken");
+    this.conts.setPassword("vpn.phfree.xyz");
+    this.conts.setLocalPort("8989");
+    if (isEmpty(this.conts.getUsername())) {
+      snack("Por favor, digite o nome de usue senha!");
+      return;
+    } 
+    if (isEmpty(this.conts.getPassword())) {
+      snack("Por favor, digite o nome de usue senha!");
+      return;
+    } 
+    Intent intent = VpnService.prepare((Context)this);
+    if (intent != null) {
+      startActivityForResult(intent, 0);
+      return;
+    } 
+    onActivityResult(0, -1, intent);
+  }
+  
+  private void toast(String paramString) {
+    Toast.makeText((Context)this, paramString, 1).show();
+  }
+  
+  public void addSwitch(NavigationView paramNavigationView, int paramInt, String paramString, boolean paramBoolean, CompoundButton.OnCheckedChangeListener paramOnCheckedChangeListener) {
+    MenuItem menuItem = paramNavigationView.getMenu().findItem(paramInt);
+    menuItem.setActionView((View)new Switch((Context)this));
+    Switch switch_ = (Switch)menuItem.getActionView();
+    switch_.setChecked(this.sp.getBoolean(paramString, paramBoolean));
+    switch_.setOnCheckedChangeListener(paramOnCheckedChangeListener);
+  }
+  
+  protected boolean isConnected() {
+    boolean bool = true;
+    NetworkInfo networkInfo = ((ConnectivityManager)getSystemService("connectivity")).getActiveNetworkInfo();
+    if (networkInfo == null || !networkInfo.isConnected() || !networkInfo.isAvailable()) {
+      bool = false;
+      Toast.makeText((Context)this, "Please Connect to Internet", -1).show();
+    } 
+    return bool;
+  }
+  
+  @Override
+  protected void onActivityResult(int paramInt1, int paramInt2, Intent paramIntent) {
+    switch (paramInt1) {
+      default:
+        super.onActivityResult(paramInt1, paramInt2, paramIntent);
+        return;
+      case 0:
+        break;
+    } 
+    try {
+      Class<?> clazz = Class.forName("net.tcodes.team24clan.InjectorService");
+      Intent intent = new Intent((Context)this, clazz);
+      intent.setAction("START_INJECTOR");
+      startService(intent);
+    } catch (ClassNotFoundException classNotFoundException) {
+      throw new NoClassDefFoundError(classNotFoundException.getMessage());
+    } 
+  }
+  
+  @Override
+  protected void onCreate(Bundle paramBundle) {
+    ADRTLogCatReader.onContext((Context)this, "com.aide.jessa");
+    super.onCreate(paramBundle);
+    Thread.setDefaultUncaughtExceptionHandler((Thread.UncaughtExceptionHandler)new ExceptionHandler((Activity)this));
+    VPNLog.clearLog();
+    doBind();
+    SSHTunnelService.addOnStatusChangedListener(this);
+    this.conts = new Constants((Context)this);
+    this.db = new DataBaseHelper((Context)this);
+    this.sp = TcodesApplication.getSharedPreferences();
+    if ((new Boolean(this.sp.getBoolean("firstStart", true))).booleanValue())
+      try {
+        this.db.insertData(Constraints.defconf);
+        JSONObject jSONObject = new JSONObject(this.db.getData());
+        this.conts.setConfigVersion(jSONObject.getString("Version"));
+        this.sp.edit().putBoolean("firstStart", false).commit();
+      } catch (Exception exception) {} 
+    setContentView(2130968605);
+    this.torrent = new TorrentDetection((Context)this, Constraints.torrentList, new TorrentDetection.TorrentListener(this) {
+          private final MainActivity this$0;
+          
+          @Override
+          public void detected(ArrayList param1ArrayList) {
+            this.this$0.stopService();
+            (new AlertDialog.Builder((Context)this.this$0)).setTitle("Sniffing App!").setMessage(String.format("%s", new Object[] { TextUtils.join(", ", param1ArrayList.toArray((Object[])new String[param1ArrayList.size()])) })).setPositiveButton("OK", (DialogInterface.OnClickListener)null).setCancelable(false).create().show();
+          }
+        });
+    this.coordinatorLayout = (CoordinatorLayout)findViewById(2131624074);
+    setupToolbar((String)null);
+    this.vpn_status = (TextView)findViewById(2131624079);
+    this.rippleBackground = (RippleBackground)findViewById(2131624107);
+    this.start_vpn = (CuboidButton)findViewById(2131624108);
+    this.start_vpn.setOnClickListener(new View.OnClickListener(this) {
+          private final MainActivity this$0;
+          
+          @Override
+          public void onClick(View param1View) {
+            if (InjectorService.isRunning) {
+              this.this$0.stopService();
+              return;
+            } 
+            if (this.this$0.isConnected()) {
+              this.this$0.startVPN();
+              return;
+            } 
+          }
+        });
+    this.mServer = (Spinner)findViewById(2131624109);
+    parseServer();
+    this.serverAdapt = new ArrayAdapter((Context)this, 17367049, this.serverList);
+    this.mServer.setAdapter((SpinnerAdapter)this.serverAdapt);
+    this.mServer.setSelection(this.sp.getInt("ServerSpin", 0));
+    this.mServer.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(this) {
+          private final MainActivity this$0;
+          
+          @Override
+          public void onItemSelected(AdapterView<?> param1AdapterView, View param1View, int param1Int, long param1Long) {
+            try {
+              JSONObject jSONObject = (new JSONObject(this.this$0.db.getData())).getJSONArray("Servers").getJSONObject(param1Int);
+              this.this$0.sp.edit().putString("SSHName", jSONObject.getString("Name")).commit();
+              this.this$0.sp.edit().putString("SSHHost", jSONObject.getString("SSHHost")).commit();
+              this.this$0.sp.edit().putString("SSHPort", jSONObject.getString("SSHPort")).commit();
+              this.this$0.sp.edit().putString("DropBear", jSONObject.getString("DropBear")).commit();
+              this.this$0.sp.edit().putString("SSLPort", jSONObject.getString("SSLPort")).commit();
+              this.this$0.sp.edit().putString("ProxyPort", jSONObject.getString("ProxyPort")).commit();
+              this.this$0.sp.edit().putInt("ServerSpin", param1Int).commit();
+              return;
+            } catch (Exception exception) {
+              this.this$0.toast(exception.getMessage());
+              return;
+            } 
+          }
+          
+          @Override
+          public void onNothingSelected(AdapterView<?> param1AdapterView) {}
+        });
+    this.mTweak = (Spinner)findViewById(2131624110);
+    parseTweak();
+    this.tweakAdapt = new ArrayAdapter((Context)this, 17367049, this.tweakList);
+    this.mTweak.setAdapter((SpinnerAdapter)this.tweakAdapt);
+    this.mTweak.setSelection(this.sp.getInt("TweakSpin", 0));
+    this.mTweak.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(this) {
+          private final MainActivity this$0;
+          
+          @Override
+          public void onItemSelected(AdapterView<?> param1AdapterView, View param1View, int param1Int, long param1Long) {
+            try {
+              if (param1AdapterView.getItemAtPosition(param1Int).toString().equals("Direct")) {
+                this.this$0.conts.setDirectEnable(true);
+                this.this$0.sp.edit().putString("TweakName", "Direct").commit();
+                this.this$0.sp.edit().putBoolean("isDirectP", false).commit();
+                this.this$0.sp.edit().putBoolean("isSSL", false).commit();
+              } else {
+                this.this$0.conts.setDirectEnable(false);
+                JSONObject jSONObject = (new JSONObject(this.this$0.db.getData())).getJSONArray("Tweaks").getJSONObject(param1Int - 1);
+                this.this$0.sp.edit().putString("TweakName", jSONObject.getString("Name")).commit();
+                this.this$0.sp.edit().putBoolean("isDirectP", jSONObject.getBoolean("Direct")).commit();
+                this.this$0.sp.edit().putBoolean("isSSL", jSONObject.getBoolean("SSL")).commit();
+                this.this$0.sp.edit().putString("Payload", jSONObject.getString("Payload")).commit();
+                this.this$0.sp.edit().putBoolean("CustomProxy", jSONObject.getBoolean("CustomProxy")).commit();
+                this.this$0.sp.edit().putString("cProxyHost", jSONObject.getString("ProxyHost")).commit();
+                this.this$0.sp.edit().putString("cProxyPort", jSONObject.getString("ProxyPort")).commit();
+              } 
+              this.this$0.sp.edit().putInt("TweakSpin", param1Int).commit();
+              return;
+            } catch (Exception exception) {
+              this.this$0.toast(exception.getMessage());
+              return;
+            } 
+          }
+          
+          @Override
+          public void onNothingSelected(AdapterView<?> param1AdapterView) {}
+        });
+    NavigationView navigationView = (NavigationView)findViewById(2131624075);
+    this.ipAddress = (TextView)navigationView.getHeaderView(0).findViewById(2131624105);
+    this.ipAddress.setText(Util.getIpAddress());
+    addSwitch(navigationView, 2131624146, "custom_tweak", false, new CompoundButton.OnCheckedChangeListener(this) {
+          private final MainActivity this$0;
+          
+          @Override
+          public void onCheckedChanged(CompoundButton param1CompoundButton, boolean param1Boolean) {
+            if (param1Boolean) {
+              this.this$0.mTweak.setEnabled(false);
+            } else {
+              this.this$0.mTweak.setEnabled(true);
+            } 
+            this.this$0.sp.edit().putBoolean("custom_tweak", param1Boolean).commit();
+          }
+        });
+    addSwitch(navigationView, 2131624147, "dns_forwarder", true, new CompoundButton.OnCheckedChangeListener(this) {
+          private final MainActivity this$0;
+          
+          @Override
+          public void onCheckedChanged(CompoundButton param1CompoundButton, boolean param1Boolean) {
+            this.this$0.sp.edit().putBoolean("dns_forwarder", param1Boolean).commit();
+          }
+        });
+    addSwitch(navigationView, 2131624148, "udp_forwarder", true, new CompoundButton.OnCheckedChangeListener(this) {
+          private final MainActivity this$0;
+          
+          @Override
+          public void onCheckedChanged(CompoundButton param1CompoundButton, boolean param1Boolean) {
+            this.this$0.sp.edit().putBoolean("udp_forwarder", param1Boolean).commit();
+          }
+        });
+    addSwitch(navigationView, 2131624149, "cpu_wakelock", true, new CompoundButton.OnCheckedChangeListener(this) {
+          private final MainActivity this$0;
+          
+          @Override
+          public void onCheckedChanged(CompoundButton param1CompoundButton, boolean param1Boolean) {
+            this.this$0.sp.edit().putBoolean("cpu_wakelock", param1Boolean).commit();
+          }
+        });
+    navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener(this) {
+          private final MainActivity this$0;
+          
+          @Override
+          public boolean onNavigationItemSelected(MenuItem param1MenuItem) {
+            Intent intent;
+            this.this$0.drawerLayout.closeDrawers();
+            switch (param1MenuItem.getItemId()) {
+              default:
+                return true;
+              case 2131624138:
+                this.this$0.snack("AlreadyUpdated!");
+                return true;
+              case 2131624139:
+                (new UpdateCore((Context)this.this$0, "http://ip-api.com/json", new UpdateCore.Listener(this) {
+                      private final MainActivity.null this$0;
+                      
+                      @Override
+                      public void onCancelled() {}
+                      
+                      @Override
+                      public void onCompleted(String param2String) throws Exception {
+                        JSONObject jSONObject = new JSONObject(param2String);
+                        StringBuffer stringBuffer = new StringBuffer();
+                        stringBuffer.append("<br>").append("ISP: ").append(jSONObject.getString("isp"));
+                        stringBuffer.append("<br>").append("Timezone: ").append(jSONObject.getString("timezone"));
+                        stringBuffer.append("<br>").append("CountryCode: ").append(jSONObject.getString("countryCode"));
+                        stringBuffer.append("<br>").append("Country:").append(jSONObject.getString("country"));
+                        stringBuffer.append("<br>").append("Region: ").append(jSONObject.getString("regionName"));
+                        stringBuffer.append("<br>").append("City: ").append(jSONObject.getString("city"));
+                        VPNLog.logInfo("Geolocation:" + stringBuffer.toString());
+                        this.this$0.this$0.snack("See result in logs..");
+                      }
+                      
+                      @Override
+                      public void onException(String param2String) {
+                        this.this$0.this$0.snack(param2String);
+                      }
+                      
+                      @Override
+                      public void onLoading() {
+                        this.this$0.this$0.snack("searching..");
+                      }
+                    })).execute((Object[])new String[0]);
+                return true;
+              case 2131624140:
+                intent = new Intent("android.intent.action.VIEW", Uri.parse("https://techoragon.com/forums/techoragon-vpn.111/"));
+                this.this$0.startActivity(intent);
+                return true;
+              case 2131624141:
+                intent = new Intent("android.intent.action.VIEW", Uri.parse("http://t.me/techoragon"));
+                this.this$0.startActivity(intent);
+                return true;
+              case 2131624142:
+                intent = new Intent("android.intent.action.VIEW", Uri.parse("https://m.facebook.com/kenneth.ojy"));
+                this.this$0.startActivity(intent);
+                return true;
+              case 2131624143:
+                intent = new Intent("android.intent.action.VIEW", Uri.parse("https://techoragon.com"));
+                this.this$0.startActivity(intent);
+                return true;
+              case 2131624144:
+                intent = new Intent("android.intent.action.VIEW", Uri.parse("https://play.google.com/store/apps/details?id=com.techoragonvpn"));
+                this.this$0.startActivity(intent);
+                return true;
+              case 2131624146:
+                (new TweakDialog((Context)this.this$0, "Custom Tweak")).show();
+                return true;
+              case 2131624147:
+                (new DNSDialog((Context)this.this$0)).show();
+                return true;
+              case 2131624149:
+                break;
+            } 
+            return true;
+          }
+        });
+    this.drawerLayout = (DrawerLayout)findViewById(2131624073);
+    ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle((Activity)this, this.drawerLayout, (Toolbar)this.toolbar, 2131361870, 2131361870);
+    this.drawerLayout.setDrawerListener((DrawerLayout.DrawerListener)actionBarDrawerToggle);
+    actionBarDrawerToggle.syncState();
+    this.v = (ImageView)findViewById(2131624080);
+    View view = this.coordinatorLayout.findViewById(2131624077);
+    this.btnAcc = (Button)findViewById(2131624081);
+    BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(view);
+    bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback(this, bottomSheetBehavior) {
+          private final MainActivity this$0;
+          
+          private final BottomSheetBehavior val$behavior;
+          
+          @Override
+          public void onSlide(View param1View, float param1Float) {}
+          
+          @Override
+          public void onStateChanged(View param1View, int param1Int) {
+            switch (param1Int) {
+              default:
+                return;
+              case 5:
+                return;
+              case 3:
+                this.this$0.btnAcc.setText("CLEAR LOG");
+                this.this$0.v.setImageResource(2130837684);
+                return;
+              case 4:
+                this.this$0.btnAcc.setText("EXIT");
+                this.this$0.v.setImageResource(2130837685);
+                return;
+              case 1:
+                return;
+              case 2:
+                break;
+            } 
+            this.val$behavior.setHideable(false);
+          }
+        });
+    ((RelativeLayout)findViewById(2131624078)).setOnClickListener(new View.OnClickListener(this, bottomSheetBehavior) {
+          private final MainActivity this$0;
+          
+          private final BottomSheetBehavior val$behavior;
+          
+          @Override
+          public void onClick(View param1View) {
+            if (this.val$behavior.getState() != 3) {
+              this.val$behavior.setState(3);
+              return;
+            } 
+            this.val$behavior.setState(4);
+          }
+        });
+    this.btnAcc.setOnClickListener(new View.OnClickListener(this, bottomSheetBehavior) {
+          private final MainActivity this$0;
+          
+          private final BottomSheetBehavior val$behavior;
+          
+          @Override
+          public void onClick(View param1View) {
+            if (this.val$behavior.getState() == 4) {
+              AlertDialog.Builder builder = new AlertDialog.Builder((Context)this.this$0);
+              builder.setMessage("Do you want to minimize or exit?");
+              builder.setPositiveButton("EXIT", new DialogInterface.OnClickListener(this) {
+                    private final MainActivity.null this$0;
+                    
+                    @Override
+                    public void onClick(DialogInterface param2DialogInterface, int param2Int) {
+                      if (Build.VERSION.SDK_INT >= 21) {
+                        this.this$0.this$0.finishAndRemoveTask();
+                      } else {
+                        Process.killProcess(Process.myPid());
+                      } 
+                      System.exit(0);
+                    }
+                  });
+              builder.setNegativeButton("MINIMIZE", new DialogInterface.OnClickListener(this) {
+                    private final MainActivity.null this$0;
+                    
+                    @Override
+                    public void onClick(DialogInterface param2DialogInterface, int param2Int) {
+                      Intent intent = new Intent("android.intent.action.MAIN");
+                      intent.addCategory("android.intent.category.HOME");
+                      intent.setFlags(268435456);
+                      this.this$0.this$0.startActivity(intent);
+                    }
+                  });
+              builder.setNeutralButton("WAIT", (DialogInterface.OnClickListener)null);
+              builder.show();
+              return;
+            } 
+            if (this.val$behavior.getState() == 3) {
+              LogFragment.clear();
+              this.this$0.snack("Cleared !");
+              return;
+            } 
+          }
+        });
+    this.adhelper = new AdmobHelper((Context)this);
+    this.adhelper.setMobileAdsId("ca-app-pub-9711327327570796~5186517611");
+    this.adhelper.setBannerId("ca-app-pub-9711327327570796/5698850016");
+    this.adhelper.setBannerSize(AdSize.SMART_BANNER);
+    this.adhelper.setBannerView((RelativeLayout)findViewById(2131624111));
+    this.adhelper.setIntertitialId("ca-app-pub-9711327327570796/7941869979");
+    this.adhelper.setShowInterAdsAuto(true);
+    this.adhelper.setRewardedId("ca-app-pub-9711327327570796/5124134947");
+    this.adhelper.setRewardAdsListener(new AdmobHelper.RewardedListener(this) {
+          private final MainActivity this$0;
+          
+          @Override
+          public void onFaild() {}
+          
+          @Override
+          public void onLoad() {}
+          
+          @Override
+          public void onLoaded() {
+            this.this$0.adhelper.showRewardedAds();
+          }
+          
+          @Override
+          public void onReward(RewardItem param1RewardItem) {
+            Toast.makeText((Context)this.this$0, "Thank you for supporting techoragon vpn!", 0).show();
+          }
+        });
+    this.adhelper.buildAdsRequest();
+    this.adhelper.loadBannerAdsRequest();
+  }
+  
+  @Override
+  public boolean onCreateOptionsMenu(Menu paramMenu) {
+    getMenuInflater().inflate(2131755008, paramMenu);
+    return true;
+  }
+  
+  @Override
+  protected void onDestroy() {
+    doUnbind();
+    super.onDestroy();
+  }
+  
+  @Override
+  protected void onInjectorConnected() {
+    if (isActive()) {
+      this.start_vpn.setCr_icon(2130837644);
+      enabledWidget(false);
+    } else {
+      this.start_vpn.setCr_icon(2130837652);
+      enabledWidget(true);
+    } 
+    super.onInjectorConnected();
+  }
+  
+  @Override
+  public void onLogReceived(String paramString) {}
+  
+  @Override
+  public boolean onOptionsItemSelected(MenuItem paramMenuItem) {
+    switch (paramMenuItem.getItemId()) {
+      default:
+        return super.onOptionsItemSelected(paramMenuItem);
+      case 2131624137:
+        break;
+    } 
+    try {
+      Class<?> clazz = Class.forName("net.tcodes.team24clan.AboutActivity");
+      startActivity(new Intent((Context)this, clazz));
+    } catch (ClassNotFoundException classNotFoundException) {
+      throw new NoClassDefFoundError(classNotFoundException.getMessage());
+    } 
+  }
+  
+  @Override
+  protected void onResume() {
+    super.onResume();
+    this.ipAddress.setText(Util.getIpAddress());
+    this.adhelper.loadBannerAdsRequest();
+    SSHTunnelService.a((Context)this);
+    if (SSHTunnelService.connected) {
+      this.vpn_status.setText("CONNECTED");
+      this.rippleBackground.stopRippleAnimation();
+      this.rippleBackground.setRippleColor(Color.parseColor(getString(2131296353)));
+      this.rippleBackground.startRippleAnimation();
+    } else {
+      this.vpn_status.setText("DISCONNECTED");
+      this.rippleBackground.stopRippleAnimation();
+      this.rippleBackground.setRippleColor(Color.parseColor(getString(2131296354)));
+      this.rippleBackground.startRippleAnimation();
+    } 
+    update();
+  }
+  
+  @Override
+  public void onStatusChanged(int paramInt) {
+    switch (paramInt) {
+      default:
+        return;
+      case 0:
+        return;
+      case 1:
+        return;
+      case 2:
+        this.rippleBackground.stopRippleAnimation();
+        this.rippleBackground.setRippleColor(Color.parseColor(getString(2131296354)));
+        this.rippleBackground.startRippleAnimation();
+        this.torrent.stop();
+        this.ipAddress.setText(Util.getIpAddress());
+        this.adhelper.loadBannerAdsRequest();
+        this.adhelper.loadIntertitial();
+        return;
+      case 3:
+        break;
+    } 
+    this.rippleBackground.stopRippleAnimation();
+    this.rippleBackground.setRippleColor(Color.parseColor(getString(2131296353)));
+    this.rippleBackground.startRippleAnimation();
+    this.torrent.start();
+    this.ipAddress.setText(Util.getIpAddress());
+    this.adhelper.loadBannerAdsRequest();
+    this.adhelper.loadRewardedAds();
+  }
+  
+  void parseServer() {
+    try {
+      JSONArray jSONArray = (new JSONObject(this.db.getData())).getJSONArray("Servers");
+      for (int i = 0;; i++) {
+        if (i >= jSONArray.length())
+          return; 
+        JSONObject jSONObject = jSONArray.getJSONObject(i);
+        this.serverList.add(jSONObject.getString("Name"));
+      } 
+    } catch (JSONException jSONException) {
+      return;
+    } 
+  }
+  
+  void parseTweak() {
+    try {
+      JSONArray jSONArray = (new JSONObject(this.db.getData())).getJSONArray("Tweaks");
+      this.tweakList.add("Direct");
+      for (int i = 0;; i++) {
+        if (i >= jSONArray.length())
+          return; 
+        JSONObject jSONObject = jSONArray.getJSONObject(i);
+        this.tweakList.add(jSONObject.getString("Name"));
+      } 
+    } catch (JSONException jSONException) {
+      return;
+    } 
+  }
+  
+  void refresh() {
+    this.serverList.clear();
+    parseServer();
+    this.serverAdapt.notifyDataSetChanged();
+    this.tweakList.clear();
+    parseTweak();
+    this.tweakAdapt.notifyDataSetChanged();
+  }
+  
+  void update() {
+    (new UpdateCore((Context)this, Constraints.updater, new UpdateCore.Listener(this) {
+          private final MainActivity this$0;
+          
+          @Override
+          public void onCancelled() {}
+          
+          @Override
+          public void onCompleted(String param1String) {
+            try {
+              JSONObject jSONObject = new JSONObject(MilitaryGradeEncrypt.decryptBase64StringToString(param1String, Constraints.confpass));
+              if (Double.valueOf(jSONObject.getString("Version")).doubleValue() <= Double.valueOf(this.this$0.conts.getConfigVersion()).doubleValue())
+                return; 
+              (new AlertDialog.Builder((Context)this.this$0)).setTitle("UPDATE!").setMessage("New UPDATE! Has Been Launched!\n \n  What is New? \n" + jSONObject.getString("Message")).setPositiveButton("OK", new DialogInterface.OnClickListener(this, param1String, jSONObject) {
+                    private final MainActivity.null this$0;
+                    
+                    private final String val$config;
+                    
+                    private final JSONObject val$obj;
+                    
+                    @Override
+                    public void onClick(DialogInterface param2DialogInterface, int param2Int) {
+                      try {
+                        this.this$0.this$0.db.updateData("1", this.val$config);
+                        this.this$0.this$0.sp.edit().putString("CurrentConfigVersion", this.val$obj.getString("Version")).commit();
+                        this.this$0.this$0.refresh();
+                        return;
+                      } catch (JSONException jSONException) {
+                        return;
+                      } 
+                    }
+                  }).setNegativeButton("CANCELAR", (DialogInterface.OnClickListener)null).create().show();
+              return;
+            } catch (Exception exception) {
+              return;
+            } 
+          }
+          
+          @Override
+          public void onException(String param1String) {}
+          
+          @Override
+          public void onLoading() {}
+        })).execute((Object[])new String[0]);
+  }
+  
+  @Override
+  public void updateState(int paramInt) {
+    this.vpn_status.setText(paramInt);
+    switch (paramInt) {
+      default:
+        onInjectorConnected();
+        super.updateState(paramInt);
+        return;
+      case 2131361874:
+      case 2131361875:
+      case 2131361876:
+        onInjectorConnected();
+        super.updateState(paramInt);
+        return;
+      case 2131361873:
+        enabledWidget(false);
+      case 2131361877:
+        break;
+    } 
+    enabledWidget(true);
+  }
+}
