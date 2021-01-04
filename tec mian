@@ -27,6 +27,7 @@ import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -106,10 +107,12 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
   
   private TextView vpn_status;
   
+  private WebView webView;
+  
   private void enabledWidget(boolean paramBoolean) {
     this.mServer.setEnabled(paramBoolean);
-    if (this.sp.getBoolean("custom_tweak", false)) {
-      this.mTweak.setEnabled(false);
+    if (this.sp.getBoolean("custom_tweak", true)) {
+      this.mTweak.setEnabled(true);
       return;
     } 
     this.mTweak.setEnabled(paramBoolean);
@@ -147,7 +150,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
   
   @SuppressWarnings("ConstantConditions")
   private void setupToolbar(String paramString) {
-    this.toolbar = (CenteredToolBar)findViewById(2131624061);
+    this.toolbar = (CenteredToolBar)findViewById(2131624063);
     setSupportActionBar((Toolbar)this.toolbar);
     if (paramString != null) {
       getSupportActionBar().setTitle(paramString);
@@ -166,8 +169,8 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
   }
   
   private void startVPN() {
-    this.conts.setUsername("ken");
-    this.conts.setPassword("vpn.phfree.xyz");
+    this.conts.setUsername("Gimsara");
+    this.conts.setPassword("gimgim");
     this.conts.setSSHHost(this.sp.getString("SSHHost", ""));
     this.conts.setSSHPort(this.sp.getString("SSHPort", ""));
     this.conts.setSSHDropbear(this.sp.getString("DropBear", ""));
@@ -182,15 +185,15 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
       this.conts.setProxy(this.sp.getString("cProxyHost", ""));
       this.conts.setProxyPort(this.sp.getString("cProxyPort", ""));
     } 
-    this.conts.setUsername("ken");
-    this.conts.setPassword("vpn.phfree.xyz");
+    this.conts.setUsername("Gimsara");
+    this.conts.setPassword("gimgim");
     this.conts.setLocalPort("8989");
     if (isEmpty(this.conts.getUsername())) {
-      snack("Por favor, digite o nome de usue senha!");
+      snack("Please enter your username and password!");
       return;
     } 
     if (isEmpty(this.conts.getPassword())) {
-      snack("Por favor, digite o nome de usue senha!");
+      snack("Please enter your username and password!");
       return;
     } 
     Intent intent = VpnService.prepare((Context)this);
@@ -218,7 +221,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
     NetworkInfo networkInfo = ((ConnectivityManager)getSystemService("connectivity")).getActiveNetworkInfo();
     if (networkInfo == null || !networkInfo.isConnected() || !networkInfo.isAvailable()) {
       bool = false;
-      Toast.makeText((Context)this, "Please Connect to Internet", -1).show();
+      Toast.makeText((Context)this, "No Internet connection", -1).show();
     } 
     return bool;
   }
@@ -244,7 +247,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
   
   @Override
   protected void onCreate(Bundle paramBundle) {
-    ADRTLogCatReader.onContext((Context)this, "com.aide.jessa");
+    ADRTLogCatReader.onContext((Context)this, "com.aide.zph.awoo");
     super.onCreate(paramBundle);
     Thread.setDefaultUncaughtExceptionHandler((Thread.UncaughtExceptionHandler)new ExceptionHandler((Activity)this));
     VPNLog.clearLog();
@@ -260,7 +263,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
         this.conts.setConfigVersion(jSONObject.getString("Version"));
         this.sp.edit().putBoolean("firstStart", false).commit();
       } catch (Exception exception) {} 
-    setContentView(2130968605);
+    setContentView(2130968606);
     this.torrent = new TorrentDetection((Context)this, Constraints.torrentList, new TorrentDetection.TorrentListener(this) {
           private final MainActivity this$0;
           
@@ -270,11 +273,11 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
             (new AlertDialog.Builder((Context)this.this$0)).setTitle("Sniffing App!").setMessage(String.format("%s", new Object[] { TextUtils.join(", ", param1ArrayList.toArray((Object[])new String[param1ArrayList.size()])) })).setPositiveButton("OK", (DialogInterface.OnClickListener)null).setCancelable(false).create().show();
           }
         });
-    this.coordinatorLayout = (CoordinatorLayout)findViewById(2131624074);
+    this.coordinatorLayout = (CoordinatorLayout)findViewById(2131624076);
     setupToolbar((String)null);
-    this.vpn_status = (TextView)findViewById(2131624079);
-    this.rippleBackground = (RippleBackground)findViewById(2131624107);
-    this.start_vpn = (CuboidButton)findViewById(2131624108);
+    this.vpn_status = (TextView)findViewById(2131624081);
+    this.rippleBackground = (RippleBackground)findViewById(2131624109);
+    this.start_vpn = (CuboidButton)findViewById(2131624110);
     this.start_vpn.setOnClickListener(new View.OnClickListener(this) {
           private final MainActivity this$0;
           
@@ -290,7 +293,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
             } 
           }
         });
-    this.mServer = (Spinner)findViewById(2131624109);
+    this.mServer = (Spinner)findViewById(2131624111);
     parseServer();
     this.serverAdapt = new ArrayAdapter((Context)this, 17367049, this.serverList);
     this.mServer.setAdapter((SpinnerAdapter)this.serverAdapt);
@@ -319,7 +322,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
           @Override
           public void onNothingSelected(AdapterView<?> param1AdapterView) {}
         });
-    this.mTweak = (Spinner)findViewById(2131624110);
+    this.mTweak = (Spinner)findViewById(2131624112);
     parseTweak();
     this.tweakAdapt = new ArrayAdapter((Context)this, 17367049, this.tweakList);
     this.mTweak.setAdapter((SpinnerAdapter)this.tweakAdapt);
@@ -357,10 +360,10 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
           @Override
           public void onNothingSelected(AdapterView<?> param1AdapterView) {}
         });
-    NavigationView navigationView = (NavigationView)findViewById(2131624075);
-    this.ipAddress = (TextView)navigationView.getHeaderView(0).findViewById(2131624105);
+    NavigationView navigationView = (NavigationView)findViewById(2131624077);
+    this.ipAddress = (TextView)navigationView.getHeaderView(0).findViewById(2131624107);
     this.ipAddress.setText(Util.getIpAddress());
-    addSwitch(navigationView, 2131624146, "custom_tweak", false, new CompoundButton.OnCheckedChangeListener(this) {
+    addSwitch(navigationView, 2131624147, "custom_tweak", false, new CompoundButton.OnCheckedChangeListener(this) {
           private final MainActivity this$0;
           
           @Override
@@ -373,7 +376,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
             this.this$0.sp.edit().putBoolean("custom_tweak", param1Boolean).commit();
           }
         });
-    addSwitch(navigationView, 2131624147, "dns_forwarder", true, new CompoundButton.OnCheckedChangeListener(this) {
+    addSwitch(navigationView, 2131624148, "dns_forwarder", true, new CompoundButton.OnCheckedChangeListener(this) {
           private final MainActivity this$0;
           
           @Override
@@ -381,7 +384,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
             this.this$0.sp.edit().putBoolean("dns_forwarder", param1Boolean).commit();
           }
         });
-    addSwitch(navigationView, 2131624148, "udp_forwarder", true, new CompoundButton.OnCheckedChangeListener(this) {
+    addSwitch(navigationView, 2131624149, "udp_forwarder", true, new CompoundButton.OnCheckedChangeListener(this) {
           private final MainActivity this$0;
           
           @Override
@@ -389,7 +392,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
             this.this$0.sp.edit().putBoolean("udp_forwarder", param1Boolean).commit();
           }
         });
-    addSwitch(navigationView, 2131624149, "cpu_wakelock", true, new CompoundButton.OnCheckedChangeListener(this) {
+    addSwitch(navigationView, 2131624150, "cpu_wakelock", true, new CompoundButton.OnCheckedChangeListener(this) {
           private final MainActivity this$0;
           
           @Override
@@ -407,10 +410,32 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
             switch (param1MenuItem.getItemId()) {
               default:
                 return true;
-              case 2131624138:
-                this.this$0.snack("AlreadyUpdated!");
+              case 2131624140:
+                intent = new Intent("android.intent.action.VIEW");
+                intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=com.gn.tunnel"));
+                this.this$0.startActivity(intent);
                 return true;
-              case 2131624139:
+              case 2131624142:
+                intent = new Intent("android.intent.action.VIEW");
+                intent.setData(Uri.parse("https://t.me/Cyber_yakku"));
+                this.this$0.startActivity(intent);
+                return true;
+              case 2131624143:
+                intent = new Intent("android.intent.action.VIEW");
+                intent.setData(Uri.parse("https://m.facebook.com/gimsara.tm"));
+                this.this$0.startActivity(intent);
+                return true;
+              case 2131624144:
+                intent = new Intent("android.intent.action.VIEW");
+                intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=com"));
+                this.this$0.startActivity(intent);
+                return true;
+              case 2131624145:
+                intent = new Intent("android.intent.action.VIEW");
+                intent.setData(Uri.parse("http://www.mediafire.com/file/6vrpawu15e0u0h4/app.apk/file"));
+                this.this$0.startActivity(intent);
+                return true;
+              case 2131624141:
                 (new UpdateCore((Context)this.this$0, "http://ip-api.com/json", new UpdateCore.Listener(this) {
                       private final MainActivity.null this$0;
                       
@@ -422,13 +447,13 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
                         JSONObject jSONObject = new JSONObject(param2String);
                         StringBuffer stringBuffer = new StringBuffer();
                         stringBuffer.append("<br>").append("ISP: ").append(jSONObject.getString("isp"));
-                        stringBuffer.append("<br>").append("Timezone: ").append(jSONObject.getString("timezone"));
-                        stringBuffer.append("<br>").append("CountryCode: ").append(jSONObject.getString("countryCode"));
+                        stringBuffer.append("<br>").append("Time Zone: ").append(jSONObject.getString("timezone"));
+                        stringBuffer.append("<br>").append("Country Code: ").append(jSONObject.getString("countryCode"));
                         stringBuffer.append("<br>").append("Country:").append(jSONObject.getString("country"));
-                        stringBuffer.append("<br>").append("Region: ").append(jSONObject.getString("regionName"));
+                        stringBuffer.append("<br>").append("Region Name: ").append(jSONObject.getString("regionName"));
                         stringBuffer.append("<br>").append("City: ").append(jSONObject.getString("city"));
-                        VPNLog.logInfo("Geolocation:" + stringBuffer.toString());
-                        this.this$0.this$0.snack("See result in logs..");
+                        VPNLog.logInfo("GeoLoacation:" + stringBuffer.toString());
+                        this.this$0.this$0.snack("See Result In Logs ..");
                       }
                       
                       @Override
@@ -438,49 +463,29 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
                       
                       @Override
                       public void onLoading() {
-                        this.this$0.this$0.snack("searching..");
+                        this.this$0.this$0.snack("Loading..");
                       }
                     })).execute((Object[])new String[0]);
                 return true;
-              case 2131624140:
-                intent = new Intent("android.intent.action.VIEW", Uri.parse("https://techoragon.com/forums/techoragon-vpn.111/"));
-                this.this$0.startActivity(intent);
-                return true;
-              case 2131624141:
-                intent = new Intent("android.intent.action.VIEW", Uri.parse("http://t.me/techoragon"));
-                this.this$0.startActivity(intent);
-                return true;
-              case 2131624142:
-                intent = new Intent("android.intent.action.VIEW", Uri.parse("https://m.facebook.com/kenneth.ojy"));
-                this.this$0.startActivity(intent);
-                return true;
-              case 2131624143:
-                intent = new Intent("android.intent.action.VIEW", Uri.parse("https://techoragon.com"));
-                this.this$0.startActivity(intent);
-                return true;
-              case 2131624144:
-                intent = new Intent("android.intent.action.VIEW", Uri.parse("https://play.google.com/store/apps/details?id=com.techoragonvpn"));
-                this.this$0.startActivity(intent);
-                return true;
-              case 2131624146:
-                (new TweakDialog((Context)this.this$0, "Custom Tweak")).show();
-                return true;
               case 2131624147:
+                (new TweakDialog((Context)this.this$0, "Custom Setting")).show();
+                return true;
+              case 2131624148:
                 (new DNSDialog((Context)this.this$0)).show();
                 return true;
-              case 2131624149:
+              case 2131624150:
                 break;
             } 
             return true;
           }
         });
-    this.drawerLayout = (DrawerLayout)findViewById(2131624073);
+    this.drawerLayout = (DrawerLayout)findViewById(2131624075);
     ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle((Activity)this, this.drawerLayout, (Toolbar)this.toolbar, 2131361870, 2131361870);
     this.drawerLayout.setDrawerListener((DrawerLayout.DrawerListener)actionBarDrawerToggle);
     actionBarDrawerToggle.syncState();
-    this.v = (ImageView)findViewById(2131624080);
-    View view = this.coordinatorLayout.findViewById(2131624077);
-    this.btnAcc = (Button)findViewById(2131624081);
+    this.v = (ImageView)findViewById(2131624082);
+    View view = this.coordinatorLayout.findViewById(2131624079);
+    this.btnAcc = (Button)findViewById(2131624083);
     BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(view);
     bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback(this, bottomSheetBehavior) {
           private final MainActivity this$0;
@@ -498,12 +503,12 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
               case 5:
                 return;
               case 3:
-                this.this$0.btnAcc.setText("CLEAR LOG");
-                this.this$0.v.setImageResource(2130837684);
+                this.this$0.btnAcc.setText("Clear Log");
+                this.this$0.v.setImageResource(2130837692);
                 return;
               case 4:
-                this.this$0.btnAcc.setText("EXIT");
-                this.this$0.v.setImageResource(2130837685);
+                this.this$0.btnAcc.setText("Go Out");
+                this.this$0.v.setImageResource(2130837693);
                 return;
               case 1:
                 return;
@@ -513,7 +518,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
             this.val$behavior.setHideable(false);
           }
         });
-    ((RelativeLayout)findViewById(2131624078)).setOnClickListener(new View.OnClickListener(this, bottomSheetBehavior) {
+    ((RelativeLayout)findViewById(2131624080)).setOnClickListener(new View.OnClickListener(this, bottomSheetBehavior) {
           private final MainActivity this$0;
           
           private final BottomSheetBehavior val$behavior;
@@ -537,7 +542,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
             if (this.val$behavior.getState() == 4) {
               AlertDialog.Builder builder = new AlertDialog.Builder((Context)this.this$0);
               builder.setMessage("Do you want to minimize or exit?");
-              builder.setPositiveButton("EXIT", new DialogInterface.OnClickListener(this) {
+              builder.setPositiveButton("Go Out", new DialogInterface.OnClickListener(this) {
                     private final MainActivity.null this$0;
                     
                     @Override
@@ -561,7 +566,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
                       this.this$0.this$0.startActivity(intent);
                     }
                   });
-              builder.setNeutralButton("WAIT", (DialogInterface.OnClickListener)null);
+              builder.setNeutralButton("CANCEL", (DialogInterface.OnClickListener)null);
               builder.show();
               return;
             } 
@@ -573,13 +578,13 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
           }
         });
     this.adhelper = new AdmobHelper((Context)this);
-    this.adhelper.setMobileAdsId("ca-app-pub-9711327327570796~5186517611");
-    this.adhelper.setBannerId("ca-app-pub-9711327327570796/5698850016");
+    this.adhelper.setMobileAdsId("ca-app-pub-9857422899062299~2737781778");
+    this.adhelper.setBannerId("ca-app-pub-9857422899062299/6078260987");
     this.adhelper.setBannerSize(AdSize.SMART_BANNER);
-    this.adhelper.setBannerView((RelativeLayout)findViewById(2131624111));
-    this.adhelper.setIntertitialId("ca-app-pub-9711327327570796/7941869979");
+    this.adhelper.setBannerView((RelativeLayout)findViewById(2131624113));
+    this.adhelper.setIntertitialId("ca-app-pub-9857422899062299/4980801730");
     this.adhelper.setShowInterAdsAuto(true);
-    this.adhelper.setRewardedId("ca-app-pub-9711327327570796/5124134947");
+    this.adhelper.setRewardedId("ca-app-pub-9857422899062299/7415393387");
     this.adhelper.setRewardAdsListener(new AdmobHelper.RewardedListener(this) {
           private final MainActivity this$0;
           
@@ -596,7 +601,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
           
           @Override
           public void onReward(RewardItem param1RewardItem) {
-            Toast.makeText((Context)this.this$0, "Thank you for supporting techoragon vpn!", 0).show();
+            Toast.makeText((Context)this.this$0, "Thank you for continues support!", 0).show();
           }
         });
     this.adhelper.buildAdsRequest();
@@ -618,10 +623,10 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
   @Override
   protected void onInjectorConnected() {
     if (isActive()) {
-      this.start_vpn.setCr_icon(2130837644);
+      this.start_vpn.setCr_icon(2130837646);
       enabledWidget(false);
     } else {
-      this.start_vpn.setCr_icon(2130837652);
+      this.start_vpn.setCr_icon(2130837655);
       enabledWidget(true);
     } 
     super.onInjectorConnected();
@@ -635,7 +640,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
     switch (paramMenuItem.getItemId()) {
       default:
         return super.onOptionsItemSelected(paramMenuItem);
-      case 2131624137:
+      case 2131624139:
         break;
     } 
     try {
@@ -653,12 +658,12 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
     this.adhelper.loadBannerAdsRequest();
     SSHTunnelService.a((Context)this);
     if (SSHTunnelService.connected) {
-      this.vpn_status.setText("CONNECTED");
+      this.vpn_status.setText("Connected");
       this.rippleBackground.stopRippleAnimation();
       this.rippleBackground.setRippleColor(Color.parseColor(getString(2131296353)));
       this.rippleBackground.startRippleAnimation();
     } else {
-      this.vpn_status.setText("DISCONNECTED");
+      this.vpn_status.setText("Disconnected");
       this.rippleBackground.stopRippleAnimation();
       this.rippleBackground.setRippleColor(Color.parseColor(getString(2131296354)));
       this.rippleBackground.startRippleAnimation();
@@ -747,7 +752,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
               JSONObject jSONObject = new JSONObject(MilitaryGradeEncrypt.decryptBase64StringToString(param1String, Constraints.confpass));
               if (Double.valueOf(jSONObject.getString("Version")).doubleValue() <= Double.valueOf(this.this$0.conts.getConfigVersion()).doubleValue())
                 return; 
-              (new AlertDialog.Builder((Context)this.this$0)).setTitle("UPDATE!").setMessage("New UPDATE! Has Been Launched!\n \n  What is New? \n" + jSONObject.getString("Message")).setPositiveButton("OK", new DialogInterface.OnClickListener(this, param1String, jSONObject) {
+              (new AlertDialog.Builder((Context)this.this$0)).setTitle("NEW UPDATE!").setMessage("New updates and announcements!\n \n  What s new? \n" + jSONObject.getString("Message")).setPositiveButton("OK", new DialogInterface.OnClickListener(this, param1String, jSONObject) {
                     private final MainActivity.null this$0;
                     
                     private final String val$config;
@@ -765,7 +770,7 @@ public class MainActivity extends MainBase implements SSHTunnelService.StatusCha
                         return;
                       } 
                     }
-                  }).setNegativeButton("CANCELAR", (DialogInterface.OnClickListener)null).create().show();
+                  }).setNegativeButton("CANCEL", (DialogInterface.OnClickListener)null).create().show();
               return;
             } catch (Exception exception) {
               return;
